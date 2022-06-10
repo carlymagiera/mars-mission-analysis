@@ -19,8 +19,11 @@ def scrape_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
+        "Hemispheres": hemispheres(browser),
         "last_modified": dt.datetime.now()
     }
+    print(data["featured_image"])
+    print(data["Hemispheres"])
 
     # Stop webdriver and return data
     browser.quit()
@@ -28,7 +31,6 @@ def scrape_all():
 
 
 def mars_news(browser):
-
     # Scrape Mars News
     # Visit the mars nasa news site
     url = 'https://data-class-mars.s3.amazonaws.com/Mars/index.html'
@@ -57,11 +59,12 @@ def mars_news(browser):
 
 def featured_image(browser):
     # Visit URL
-    url = 'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/index.html'
+    url = 'https://spaceimages-mars.com/' #'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/index.html'
     browser.visit(url)
 
     # Find and click the full image button
     full_image_elem = browser.find_by_tag('button')[1]
+    print(full_image_elem)
     full_image_elem.click()
 
     # Parse the resulting html with soup
@@ -72,7 +75,7 @@ def featured_image(browser):
     try:
         # Find the relative image url
         img_url_rel = img_soup.find('img', class_='fancybox-image').get('src')
-
+        print(img_url_rel)
     except AttributeError:
         return None
 
@@ -96,6 +99,63 @@ def mars_facts():
 
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
+
+def hemispheres(browser):
+    item = img_soup.find_all("div", class_ = "item")
+    dic = {}
+    for i in item:
+        mars_hemispheres = []
+        tag = (i.find("a", class_ = "itemLink product-item")).get("href")
+        browser.visit(url + tag)
+        html = browser.html
+        img_soup = soup(html, 'html.parser')
+        title=img_soup.find("h2", class_ = "title").get_text()
+        dic["title"] = title
+        link = img_soup.find("div", class_ = "downloads")
+        link2 = link.find_all("li")[0]
+        img_url = (link2.find("a")).get("href")
+        dic["img_url"] = (url+img_url)
+        mars_hemispheres.append(dic)
+        browser.back() 
+        return(mars_hemispheres)
+
+
+
+
+
+
+# def hemispheres(browser):
+#     url = 'https://marshemispheres.com/'
+#     browser.visit(url)
+
+#     html = browser.html
+#     img_soup = soup(html, 'html.parser')
+
+#     hemi_urls = []
+#     hemi_titles = []
+
+#     item = img_soup.find_all("div", class_ = "item")
+#     for i in item:
+#         tag = (i.find("a", class_ = "itemLink product-item")).get("href")
+#         browser.visit(url + tag)
+
+#         html = browser.html
+#         img_soup = soup(html, 'html.parser')
+#     try:
+#         title=img_soup.find("h2", class_ = "title").get_text()
+#         hemi_titles.append(title)
+#         #print(title)
+#         link = img_soup.find("div", class_ = "downloads")
+#         link2 = link.find_all("li")[0]
+#         img_url = (link2.find("a")).get("href")
+#         hemi_urls.append(url+img_url)
+#     except AttributeError:
+#         return None
+#         #print(url+img_url)
+#     browser.back()
+#     hemispheres_ = [{'img_url': hemi_urls, 'title': hemi_titles } for (hemi_urls, hemi_titles) in zip(hemi_urls, hemi_titles)] 
+#     return hemi_urls, hemi_titles
+
 
 if __name__ == "__main__":
 
